@@ -57,6 +57,7 @@ const (
 	ColumnTypeChar     ColumnType = iota
 	ColumnTypeVarChar  ColumnType = iota
 	ColumnTypeText     ColumnType = iota
+	ColumnTypeLongText ColumnType = iota
 	ColumnTypeDateTime ColumnType = iota
 )
 
@@ -125,6 +126,14 @@ func (d ColumnType) Format(dialect DialectType, size OptionalInt) (string, error
 		return "DATETIME", nil
 	case ColumnTypeText:
 		return "TEXT", nil
+	case ColumnTypeLongText:
+		{
+			// MySQL TEXT is limited to 64KB, so use MEDIUMTEXT for larger sizes (up to 16MB)
+			if dialect == DialectMySQL {
+				return "MEDIUMTEXT", nil
+			}
+			return "TEXT", nil
+		}
 	}
 	return "", fmt.Errorf("unsupported column type %d for dialect %d and size %v", d, dialect, size)
 }
